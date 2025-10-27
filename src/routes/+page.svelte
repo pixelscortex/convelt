@@ -13,9 +13,11 @@
 		if (existingTask !== undefined) {
 			const now = Date.now();
 			const newTask = {
-				_id: crypto.randomUUID() as Id<'tasks'>,
 				_creationTime: now,
-				...args
+				_id: crypto.randomUUID() as Id<'tasks'>,
+				category: 'personal',
+				completed: false,
+				title: args.title
 			};
 			localStore.setQuery(api.tasks.getAll, {}, [...existingTask, newTask]);
 		}

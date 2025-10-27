@@ -5,10 +5,10 @@ import { onCleanup } from 'runed';
 import { convexToJson } from 'convex/values';
 
 type QueryParams<Query extends FunctionReference<'query'>> = {
-	args: OptionalIfNever<FunctionArgs<Query>>;
+	args: OptionalIfNever<FunctionArgs<Query>> | 'skip';
 };
 
-type CreateQueryResult<Query extends FunctionReference<'query'>> =
+type QueryResult<Query extends FunctionReference<'query'>> =
 	| {
 			readonly loading: true;
 			readonly data: undefined;
@@ -23,6 +23,11 @@ type CreateQueryResult<Query extends FunctionReference<'query'>> =
 			readonly loading: false;
 			readonly data: undefined;
 			readonly error: Error;
+	  }
+	| {
+			readonly loading: undefined;
+			readonly data: undefined;
+			readonly error: undefined;
 	  };
 
 /**
@@ -35,14 +40,19 @@ type CreateQueryResult<Query extends FunctionReference<'query'>> =
  * // Valid: No args needed, so params function is optional
  * const allTodos = createQuery(api.todos.list);
  *
- * // Valid: No args needed, but we want to disable it
- * const disabledTodos = createQuery(api.todos.list, () => ({
- *   disabled: true
+ * // Valid: Skip the query conditionally by returning "skip"
+ * const skippedTodos = createQuery(api.todos.list, () => ({
+ *   args: shouldSkip ? "skip" : undefined
  * }));
  *
  * // Valid: Args are required, so params function is mandatory
  * const todoById = createQuery(api.todos.get, () => ({
  *   args: { id: '123' }
+ * }));
+ *
+ * // Valid: Skip query with args when condition is met
+ * const conditionalTodo = createQuery(api.tasks.byId, () => ({
+ *   args: randomId ? { id: randomId } : "skip"
  * }));
  *
  * // TypeScript Error: `args` are required but not provided.
@@ -56,9 +66,9 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 ) {
 	const client = getConvex();
 
-	let result = $state.raw<CreateQueryResult<Query>>({
+	let result = $state.raw<QueryResult<Query>>({
 		data: undefined,
-		loading: true,
+		loading: undefined,
 		error: undefined
 	});
 
@@ -74,6 +84,21 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 	}
 
 	$effect(() => {
+		if (args === 'skip') {
+			result = {
+				data: undefined,
+				loading: undefined,
+				error: undefined
+			};
+			return;
+		}
+
+		result = {
+			data: undefined,
+			loading: true,
+			error: undefined
+		};
+
 		const unsubscribe = client.onUpdate(
 			query,
 			convexToJson(args ?? {}),
@@ -107,5 +132,5 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 		get error() {
 			return result.error;
 		}
-	} as CreateQueryResult<Query>;
+	} as QueryResult<Query>;
 }

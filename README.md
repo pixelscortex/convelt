@@ -1,10 +1,10 @@
 # @pixelscortex/convelt
 
-A lightweight, feature-rich Convex client implementation for Svelte. Built because existing solutions don't update fast enough and lack essential features.
+A Convex client for Svelte that brings React's Convex hooks to Svelte. Built to match the features and developer experience of the React implementation.
 
-## Why This Exists
+## Why I'm Building This
 
-The official `convex-svelte` package updates slowly and missing key features. This implementation provides faster updates and enhanced functionality.
+I want Svelte to have the same Convex features and hooks that React enjoys. The official `convex-svelte` package is slow to update and missing functionality that React developers take for granted. This is my attempt to bridge that gap and give Svelte developers feature parity.
 
 ## Todo
 
@@ -35,7 +35,6 @@ const todoById = createQuery(api.todos.get, () => ({
 const skippedTodos = createQuery(api.todos.list, () => ({
 	args: shouldSkip ? 'skip' : undefined
 }));
-
 ```
 
 ### `createMutation`
@@ -59,7 +58,7 @@ const updateTodo = createMutation(api.todos.update, {
 
 ## Status
 
-🚧 Under active development. Maintained by 1 person.
+Under active development. Breaking changes likely as I figure things out. Maintained by 1 person.
 
 ## License
 

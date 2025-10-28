@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import { env } from '$env/dynamic/public';
 import { ConvexClient, type ConvexClientOptions } from 'convex/browser';
 import { createContext } from 'svelte';
+import type { ConveltManager } from './convelt-manager.svelte.js';
 
 export const [getConvex, setConvex] = createContext<ConvexClient>();
 
@@ -14,3 +15,5 @@ export function createConvexClient(url?: string, options: ConvexClientOptions = 
 		disabled: !browser
 	});
 }
+
+export const [getConveltManager, setConveltManager] = createContext<ConveltManager>();

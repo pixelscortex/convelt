@@ -1,5 +1,5 @@
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
-import { getConvex } from './context.js';
+import { getConveltManager } from './context.js';
 import type { OptionalIfNever } from './type-helper.js';
 import { onCleanup } from 'runed';
 import { convexToJson } from 'convex/values';
@@ -64,7 +64,7 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 		? [params?: () => Omit<Partial<QueryParams<Query>>, 'args'>]
 		: [params: () => QueryParams<Query>]
 ) {
-	const client = getConvex();
+	const manager = getConveltManager();
 
 	let result = $state.raw<QueryResult<Query>>({
 		data: undefined,
@@ -99,26 +99,19 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 			error: undefined
 		};
 
-		const unsubscribe = client.onUpdate(
-			query,
-			convexToJson(args ?? {}),
-			(d) => {
-				result = {
-					data: structuredClone(d),
-					loading: false,
-					error: undefined
-				};
-			},
-			(error) => {
-				result = {
-					data: undefined,
-					loading: false,
-					error: error
-				};
-			}
-		);
+		const callback = (r: Omit<QueryResult<Query>, 'loading'>) => {
+			// Todo Clean this up make it pretty XD
+			result = r.data
+				? { data: structuredClone(r.data), error: undefined, loading: false }
+				: {
+						...r,
+						loading: false
+					};
+		};
+		manager.track(query, args, callback);
+
 		onCleanup(() => {
-			unsubscribe?.();
+			manager.untrack(query, convexToJson(args ?? {}), callback);
 		});
 	});
 

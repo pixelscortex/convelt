@@ -3,6 +3,7 @@ import { getConveltManager } from './context.js';
 import type { OptionalIfNever } from './type-helper.js';
 import { onCleanup } from 'runed';
 import { convexToJson } from 'convex/values';
+import type { ResultCallback } from './convelt-manager.svelte.js';
 
 type QueryParams<Query extends FunctionReference<'query'>> = {
 	args: OptionalIfNever<FunctionArgs<Query>> | 'skip';
@@ -99,7 +100,7 @@ export function createQuery<Query extends FunctionReference<'query'>>(
 			error: undefined
 		};
 
-		const callback = (r: Omit<QueryResult<Query>, 'loading'>) => {
+		const callback: ResultCallback<FunctionReturnType<Query>, Error> = (r) => {
 			// Todo Clean this up make it pretty XD
 			result = r.data
 				? { data: structuredClone(r.data), error: undefined, loading: false }

@@ -5,10 +5,28 @@
 	import { createQuery } from '$lib/create-query.svelte.js';
 	import { createMutation } from '$lib/create-mutation.svelte.js';
 	import type { Id } from '../convex/_generated/dataModel.js';
+	import { createPaginatedQuery } from '$lib/create-paginated-query.svelte.js';
 
 	const tasksGetAll = createQuery(api.tasks.getAll);
 
 	const tasksGetAll2 = createQuery(api.tasks.getAll);
+
+	const paginatedQuery = createPaginatedQuery(
+		api.tasks.list,
+		() => ({
+			args: {
+				category: 'personal'
+			}
+		}),
+		{
+			initialNumItems: 15,
+			pageSize: 10
+		}
+	);
+
+	$effect(() => {
+		$inspect(paginatedQuery);
+	});
 
 	const addTask = createMutation(api.tasks.create, (localStore, args) => {
 		const existingTask = localStore.getQuery(api.tasks.getAll);
@@ -36,8 +54,21 @@
 	}}>Add Task</Button
 >
 
+<Button
+	onclick={() => {
+		paginatedQuery.loadMore();
+	}}>Next</Button
+>
+
+<ul class="flex flex-col gap-2">
+	{#each paginatedQuery.result as task, index (index)}
+		<li>
+			{task.title}
+		</li>
+	{/each}
+</ul>
 <div class="flex gap-2">
-	<pre>
+	<!-- <pre>
         {#if tasksGetAll.loading === undefined}
 			Disabled
 		{:else if tasksGetAll.loading}
@@ -60,5 +91,5 @@
 				{JSON.stringify(task, null, 2)}
 			{/each}
 		{/if}
-    </pre>
+    </pre> -->
 </div>

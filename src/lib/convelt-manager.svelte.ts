@@ -1,6 +1,7 @@
 import type { ConvexClient } from 'convex/browser';
 import {
 	getFunctionName,
+	type DefaultFunctionArgs,
 	type FunctionArgs,
 	type FunctionReference,
 	type FunctionReturnType
@@ -11,10 +12,9 @@ import { getConvex } from './context.js';
 
 type Identifier = string;
 
-type Result<D, E> = {
-	data: D | undefined;
-	error: E | undefined;
-};
+export type ResultCallback<T, E> = (
+	result: { data: T; error: undefined } | { data: undefined; error: E }
+) => void;
 
 export class ConveltManager {
 	#client = getConvex();
@@ -23,18 +23,17 @@ export class ConveltManager {
 		string,
 		{
 			// reference counting
-			listeners: SvelteSet<
-				(result: Result<FunctionReturnType<FunctionReference<'query'>>, Error>) => void
-			>;
+			/* eslint-disable  @typescript-eslint/no-explicit-any */
+			listeners: SvelteSet<ResultCallback<any, Error>>;
 			unsubscribeFn: ReturnType<ConvexClient['onUpdate']>;
 		}
 	>();
 
-	track<Query extends FunctionReference<'query'>>(
-		query: Query,
-		args: FunctionArgs<Query>,
-		callback: (result: Result<FunctionReturnType<Query>, Error>) => void
-	) {
+	track<
+		Result,
+		Query extends FunctionReference<'query', 'public', DefaultFunctionArgs, Result>,
+		Args extends FunctionArgs<Query>
+	>(query: Query, args: Args, callback: ResultCallback<Result, Error>) {
 		const identifier = getIdentifier(query, args);
 
 		if (this.#activeSubscriptions.has(identifier)) {
@@ -46,18 +45,20 @@ export class ConveltManager {
 			listeners: new SvelteSet([callback]),
 			unsubscribeFn: this.#client.onUpdate(
 				query,
-				convexToJson(args ?? {}),
-				(data) => this.#callListener(identifier, data, undefined),
-				(error) => this.#callListener(identifier, undefined, error)
+				args ?? {},
+				(data) =>
+					this.#callListener<Result, Query, FunctionReturnType<Query>>(identifier, data, undefined),
+				(error) =>
+					this.#callListener<Result, Query, FunctionReturnType<Query>>(identifier, undefined, error)
 			)
 		});
 	}
 
-	untrack<Query extends FunctionReference<'query'>>(
-		query: Query,
-		args: FunctionArgs<Query>,
-		callback: (result: Result<FunctionReturnType<Query>, Error>) => void
-	) {
+	untrack<
+		Result,
+		Query extends FunctionReference<'query', 'public', DefaultFunctionArgs, Result>,
+		Args extends FunctionArgs<Query>
+	>(query: Query, args: Args, callback: ResultCallback<Result, Error>) {
 		const identifier = getIdentifier(query, args);
 		const subscription = this.#activeSubscriptions.get(identifier);
 		if (!subscription) return;
@@ -68,11 +69,11 @@ export class ConveltManager {
 		}
 	}
 
-	#callListener<Query extends FunctionReference<'query'>>(
-		identifier: Identifier,
-		data: FunctionReturnType<Query>,
-		error: Error | undefined
-	) {
+	#callListener<
+		Result,
+		Query extends FunctionReference<'query', 'public', DefaultFunctionArgs, Result>,
+		Data extends FunctionReturnType<Query>
+	>(identifier: Identifier, data: Data | undefined, error: Error | undefined) {
 		this.#activeSubscriptions
 			.get(identifier)
 			?.listeners.forEach((listener) => listener({ data, error }));

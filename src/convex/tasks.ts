@@ -34,7 +34,7 @@ export const create = mutation({
 });
 
 export const list = query({
-	args: { paginationOpts: paginationOptsValidator },
+	args: { category: v.string(), paginationOpts: paginationOptsValidator },
 	handler: async (ctx, args) => {
 		return await ctx.db.query('tasks').paginate(args.paginationOpts);
 	}

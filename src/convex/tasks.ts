@@ -36,6 +36,6 @@ export const create = mutation({
 export const list = query({
 	args: { category: v.string(), paginationOpts: paginationOptsValidator },
 	handler: async (ctx, args) => {
-		return await ctx.db.query('tasks').paginate(args.paginationOpts);
+		return await ctx.db.query('tasks').order('desc').paginate(args.paginationOpts);
 	}
 });

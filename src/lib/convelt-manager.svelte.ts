@@ -38,7 +38,8 @@ export class ConveltManager {
 
 		if (this.#activeSubscriptions.has(identifier)) {
 			this.#activeSubscriptions.get(identifier)?.listeners.add(callback);
-			return;
+
+			return () => this.untrack(query, args, callback);
 		}
 
 		this.#activeSubscriptions.set(identifier, {
@@ -52,6 +53,8 @@ export class ConveltManager {
 					this.#callListener<Result, Query, FunctionReturnType<Query>>(identifier, undefined, error)
 			)
 		});
+
+		return () => this.untrack(query, args, callback);
 	}
 
 	untrack<
@@ -76,7 +79,7 @@ export class ConveltManager {
 	>(identifier: Identifier, data: Data | undefined, error: Error | undefined) {
 		this.#activeSubscriptions
 			.get(identifier)
-			?.listeners.forEach((listener) => listener({ data, error }));
+			?.listeners.forEach((listener) => listener({ data, error } as any));
 	}
 }
 

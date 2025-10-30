@@ -19,28 +19,23 @@
 			}
 		}),
 		{
-			initialNumItems: 15,
-			pageSize: 10
+			pageSize: 2
 		}
 	);
 
-	$effect(() => {
-		$inspect(paginatedQuery);
-	});
-
 	const addTask = createMutation(api.tasks.create, (localStore, args) => {
-		const existingTask = localStore.getQuery(api.tasks.getAll);
-		if (existingTask !== undefined) {
-			const now = Date.now();
-			const newTask = {
-				_creationTime: now,
-				_id: crypto.randomUUID() as Id<'tasks'>,
-				category: 'personal',
-				completed: false,
-				title: args.title
-			};
-			localStore.setQuery(api.tasks.getAll, {}, [...existingTask, newTask]);
-		}
+		// const existingTask = localStore.getQuery(api.tasks.getAll);
+		// if (existingTask !== undefined) {
+		// 	const now = Date.now();
+		// 	const newTask = {
+		// 		_creationTime: now,
+		// 		_id: crypto.randomUUID() as Id<'tasks'>,
+		// 		category: 'personal',
+		// 		completed: false,
+		// 		title: args.title
+		// 	};
+		// 	localStore.setQuery(api.tasks.getAll, {}, [...existingTask, newTask]);
+		// }
 	});
 </script>
 
